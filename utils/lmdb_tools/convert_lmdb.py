@@ -12,7 +12,7 @@ def npy_to_lmdb(npy_data_dir, npy_label_dir, lmdb_out_dir, segment_length_s
     #, visual_tools
       ):
 
-    lmdb_map_size = 1099511627776
+    lmdb_map_size = 53687091200
 
     if os.path.exists(lmdb_out_dir):
         shutil.rmtree(lmdb_out_dir)
@@ -252,8 +252,8 @@ def debug_read_lmdb(lmdb_dir):
             cursor.set_key(k)
             datum=SimpleDatum()
             datum.ParseFromString(cursor.value())
-            data = np.fromstring(datum.data, dtype=np.float32).reshape(-1, datum.data_dim)
-            label = np.fromstring(datum.label, dtype=np.float32).reshape(-1, datum.label_dim)
+            data = np.frombuffer(datum.data, dtype=np.float32).reshape(-1, datum.data_dim)
+            label = np.frombuffer(datum.label, dtype=np.float32).reshape(-1, datum.label_dim)
             wav_name = datum.wave_name.decode()
             print(wav_name)
             print('data:', data.shape)
@@ -279,9 +279,9 @@ def debug_read_lmdb2(lmdb_dir):
 if __name__ == "__main__":
     # 2022
     # 2024
-    npy_data_dir = '.../feat_label/foa_dev'
-    npy_label_dir = '.../foa_dev_label'
-    lmdb_out_dir = '.../lmdb_synthdata_len10s'
+    npy_data_dir = './data/feature_labels_2023/mic_dev'
+    npy_label_dir = './data/feature_labels_2023/mic_dev_label'
+    lmdb_out_dir = './data/feature_labels_2023/lmdb_synthdata_len10s'
     segment_length_s=10
     npy_to_lmdb(npy_data_dir, npy_label_dir, lmdb_out_dir,segment_length_s)
     debug_read_lmdb(lmdb_out_dir)

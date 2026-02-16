@@ -15,15 +15,15 @@ def get_params(argv='1'):
 
         # INPUT PATH
         # dataset_dir='DCASE2020_SELD_dataset/',  # Base folder containing the foa/mic and metadata folders
-        dataset_dir = '...',
+        dataset_dir = 'C:/data/2024DCASE_data/',
 
         # OUTPUT PATHS
         # feat_label_dir='DCASE2020_SELD_dataset/feat_label_hnet/',  # Directory to dump extracted features and labels
-        feat_label_dir = '...',
+        feat_label_dir = './data/feature_labels_2023',
 
         # DATASET LOADING PARAMETERS
         mode='dev',         # 'dev' - development or 'eval' - evaluation dataset
-        dataset='foa',       # 'foa' - ambisonic or 'mic' - microphone signals
+        dataset='mic',       # 'foa' - ambisonic or 'mic' - microphone signals
 
         #FEATURE PARAMS
         fs=24000,
@@ -36,6 +36,7 @@ def get_params(argv='1'):
         fmin_doa_salsalite = 50,
         fmax_doa_salsalite = 2000,
         fmax_spectra_salsalite = 9000,
+        label_sequence_length = 100, # Number of label frames in a training sample. Each label frame corresponds to label_hop_len_s seconds.
 
         # MODEL TYPE
         multi_accdoa=False,  # False - Single-ACCDOA or True - Multi-ACCDOA
@@ -56,5 +57,23 @@ def get_params(argv='1'):
     feature_label_resolution = int(params['label_hop_len_s'] // params['hop_len_s'])
     params['feature_sequence_length'] = params['label_sequence_length'] * feature_label_resolution
     params['unique_classes'] = 13
+
+
+    # Raw Audio Chunks
+    params['label_sequence_length'] = 1 # use only one time frame for tdoa training
+    params['feature_sequence_length'] = params['label_sequence_length'] * feature_label_resolution
+    params['raw_chunks'] = True
+    params['quick_test'] = False
+    params['dataset'] = 'mic'
+    params['use_salsalite'] = False
+    params['multi_accdoa'] = False
+    params['n_mics'] = 4
+    params['ngcc_channels'] = 32
+    params['ngcc_out_channels'] = 16 
+    params['saved_chunks'] = True
+    params['use_mel'] = False
+    params['nb_epochs'] = 1
+    params['lambda'] = 1.0 # set to 1.0 to only train tdoa, and 0.0 to only train SELD
+    params['tracks'] = 3
 
     return params

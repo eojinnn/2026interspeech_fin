@@ -7,28 +7,28 @@ import pdb
 
 def process_foa_input_sed_doa_labels(feat, label):
     mel_bins = 64
-    nb_ch = 7
+    nb_ch = 10
     feat = feat.reshape(feat.shape[0], nb_ch, mel_bins)
     feat = np.transpose(feat, (1, 0, 2))
     return feat, label
 
 def process_foa_input_sed_doa(feat):
     mel_bins = 64
-    nb_ch = 7
+    nb_ch = 10
     feat = feat.reshape(feat.shape[0], nb_ch, mel_bins)
     feat = np.transpose(feat, (1, 0, 2))
     return feat
 
 def process_foa_input_128d_sed_doa_labels(feat, label):
     mel_bins = 128
-    nb_ch = 7
+    nb_ch = 10
     feat = feat.reshape(feat.shape[0], nb_ch, mel_bins)
     feat = np.transpose(feat, (1, 0, 2))
     return feat, label
 
 def process_foa_input_ssast_data_labels(feat, label):
     mel_bins = 128
-    nb_ch = 7
+    nb_ch = 10
     feat = feat.reshape(feat.shape[0], nb_ch, mel_bins)
     feat = np.transpose(feat, (1, 0, 2))
     feat = feat[0, :, :]
@@ -38,10 +38,26 @@ def process_foa_input_ssast_data_labels(feat, label):
 def process_foa_input_sed_labels(feat, label):
     nb_classes = 13
     mel_bins = 64
-    nb_ch = 7
+    nb_ch = 10
     feat = feat.reshape(feat.shape[0], nb_ch, mel_bins)
     feat = np.transpose(feat, (1, 0, 2))
     return feat, label[:,:nb_classes]
+
+# raw audio
+def process_raw_mic_input(feat, label):
+# 입력 feat: (500, 1920) 
+    # -> 시간(Time)축 500개, 데이터(1920)는 4채널x480샘플이 섞여있음
+    
+    # 1. 1920을 4채널 * 480샘플로 분리
+    # 형태 변화: (500, 1920) -> (500, 4, 480)
+    feat = feat.reshape(feat.shape[0], 4, 480)
+    
+    # 2. 채널(Mic)을 맨 앞으로 이동
+    # 형태 변화: (500, 4, 480) -> (4, 500, 480)
+    # (Mics, Time_Frames, Win_Len)
+    feat = np.transpose(feat, (1, 0, 2))
+    
+    return feat, label
 
 class SedDoaResult():
     def __init__(self, segment_length) -> None:

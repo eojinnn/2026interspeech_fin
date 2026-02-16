@@ -3,3 +3,7 @@
 *_key.pub
 *.pem
 *.key
+
+data/
+output/
+__pycache__/
