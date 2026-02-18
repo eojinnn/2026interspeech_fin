@@ -4,7 +4,7 @@ data:
   ref_files_dir: 'C:/data/2024DCASE_data/metadata_dev' # label files
   norm_file: './data/feature_labels_2023/mic_wts' # normalization file
   segment_len: 100 
-  batch_size: 2
+  batch_size: 16
   train_ignore: 'enh' # or None. 'enh' means ignore the enhancement data
   test_ignore: 'enh'
 

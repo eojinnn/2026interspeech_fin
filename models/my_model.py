@@ -14,10 +14,6 @@ def conv1x1(in_planes, out_planes, stride=1):
     """1x1 convolution"""
     return nn.Conv2d(in_planes, out_planes, kernel_size=1, stride=stride, bias=False)
 
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
-
 class GCC_PHAT(nn.Module):
     def __init__(self, n_lags=64):
         super().__init__()
@@ -66,7 +62,6 @@ class GCC_PHAT(nn.Module):
         out = torch.stack(cc_list, dim=1)
         
         return out
-
 
 class PostBackboneCNN(nn.Module):
     def __init__(self, in_channels=64, target_frames=500, origin_samples=240000):
@@ -170,17 +165,14 @@ class ResnetConformer_seddoa_nopool_2023(nn.Module):
 
         self.backbone = SincNet(sincnet_params)
         self.post_process = PostBackboneCNN(in_channels=64)
-        self.gcc = GCC_PHAT(n_lags=64)
 
     def forward(self, audio):
         # pdb.set_trace() # [32, 7, 500, 64]
         B, M, T, L = audio.shape # (batch_size, #mics, #time_windows, win_len)
-        cc = self.gcc(audio)
         x = audio.reshape(-1, 1, T*L)
         x = self.backbone(x) #torch.Size([64, 64, 240000])
-        x = self.post_process(x) 
+        x = self.post_process(x) (16, 4, 500, 64)
         
-        x = torch.cat([x, cc], dim=1) # [16, 4+6, 500, 64]
 
         conv_outputs = self.resnet(x)
         N,C,T,W = conv_outputs.shape

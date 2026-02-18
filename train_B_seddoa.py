@@ -11,7 +11,7 @@ import yaml
 
 from my_data_loader import LmdbDataset
 
-from models.my_model import ResnetConformer_seddoa_nopool_2023
+from models.my_model2 import ResnetConformer_seddoa_nopool_2023
 
 from lr_scheduler.tri_stage_lr_scheduler import TriStageLRScheduler
 
@@ -20,7 +20,7 @@ from utils.cls_tools.cls_compute_seld_results import ComputeSELDResults
 from utils.write_csv import write_output_format_file
 
 from utils.sed_doa import process_foa_input_sed_doa_labels, process_raw_mic_input, SedDoaLoss, SedDoaResult_2023
-
+os.environ['CUDA_LAUNCH_BLOCKING'] = '1'
 
 def set_random_seed(seed):
     np.random.seed(seed)
