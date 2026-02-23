@@ -9,15 +9,15 @@ data:
   test_ignore: 'enh'
 
 model:
-  type: 'seddist_nopool' # my_model 1,2
+  type: 'seddist_nopool' # my_model5
   criterion: 'BCE+MSPE'
   loss_weight: [0.1, 1.0]
-  in_channel: 10
+  in_channel: 13
   in_dim: 64
   out_dim: 39
   # 'early_manifold'
   pre-train: False
-  pre-train_model: '...'
+  pre-train_model: '...' #'./output/my_experiment3/checkpoints\checkpoint_epoch184_step100000.pth'
 
 train:
   train_num_workers: 8
@@ -26,7 +26,11 @@ train:
   nb_steps: 100000
 
 result:
-  log_output_path: './output/my_experiment/train.log'
+  log_output_path: './output/my_experiment6/train.log'
   log_interval: 100
-  checkpoint_output_dir: './output/my_experiment/checkpoints'
-  dcase_output_dir: './output/my_experiment/results'
+  checkpoint_output_dir: './output/my_experiment6/checkpoints'
+  dcase_output_dir: './output/my_experiment6/results'
+
+test:
+  test_output_dir: './output/my_experiment6/test_outputs.log'
+  test_output_csv_dir: './output/my_experiment6/test_csvs'

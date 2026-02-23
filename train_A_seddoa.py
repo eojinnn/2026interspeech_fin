@@ -95,6 +95,7 @@ def main(args):
         for data in train_dataloader:
             input = data['input'].to(device)
             target = data['target'].to(device)
+            print(input.shape, target.shape)
             #pdb.set_trace()
             optimizer.zero_grad()
             output = model(input)

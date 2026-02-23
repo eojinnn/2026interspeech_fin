@@ -11,7 +11,7 @@ import yaml
 
 from my_data_loader import LmdbDataset
 
-from models.my_model2 import ResnetConformer_seddoa_nopool_2023
+from models.my_model6 import ResnetConformer_seddoa_nopool_2023
 
 from lr_scheduler.tri_stage_lr_scheduler import TriStageLRScheduler
 
@@ -40,7 +40,7 @@ def main(args):
     # data_process_fn = process_foa_input_sed_doa_labels
     data_process_fn = process_raw_mic_input
     result_class = SedDoaResult_2023
-    criterion = SedDoaLoss(loss_weight=[0.1,1])
+    criterion = SedDoaLoss(loss_weight=[0.1,1.0])
     model = ResnetConformer_seddoa_nopool_2023(in_channel=args['model']['in_channel'], in_dim=args['model']['in_dim'], out_dim=args['model']['out_dim'])
 
     # 训练集初始化
@@ -96,6 +96,7 @@ def main(args):
         for data in train_dataloader:
             input = data['input'].to(device)
             target = data['target'].to(device)
+            print(target.shape)
             #pdb.set_trace()
             optimizer.zero_grad()
             output = model(input)
@@ -121,15 +122,15 @@ def main(args):
         start_time = time.time()
         model.eval()
         test_result = result_class(segment_length=args['data']['segment_len'])
-        for data in test_dataloader:
-            input = data['input'].to(device)
-            target = data['target'].to(device)
-            with torch.no_grad():
+        with torch.no_grad():
+            for data in test_dataloader:
+                input = data['input'].to(device)
+                target = data['target'].to(device)
                 output = model(input)
+
                 loss = criterion(output, target)
                 test_loss.append(loss.item())
-
-            test_result.add_items(data['wav_names'], output)
+                test_result.add_items(data['wav_names'], output.detach().cpu().numpy())
         output_dict = test_result.get_result()
         test_time = time.time() - start_time
         

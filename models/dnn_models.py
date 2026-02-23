@@ -10,6 +10,7 @@ import torch.nn.functional as F
 import torch.nn as nn
 from torch.autograd import Variable
 import math
+import time
 
 # --- [Helper Function] torch_same_pad 대체 구현 ---
 def get_pad(size, kernel_size, stride=1, dilation=1):
@@ -345,7 +346,7 @@ class MLP(nn.Module):
          current_input = self.fc_lay[i]
 
     def forward(self, x):
-
+    
       # Applying Layer/Batch Norm
       if bool(self.fc_use_laynorm_inp):
         x = self.ln0((x))
@@ -462,7 +463,6 @@ class SincNet(nn.Module):
        x = x.view(batch, 1, seq_len)
 
        for i in range(self.N_cnn_lay):
-
          s = x.shape[2]
          padding = get_pad(
              size=s, kernel_size=self.cnn_len_filt[i], stride=1, dilation=1)

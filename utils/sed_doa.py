@@ -45,7 +45,7 @@ def process_foa_input_sed_labels(feat, label):
 
 # raw audio
 def process_raw_mic_input(feat, label):
-# 입력 feat: (500, 1920) 
+    # 입력 feat: (500, 1920) 
     # -> 시간(Time)축 500개, 데이터(1920)는 4채널x480샘플이 섞여있음
     
     # 1. 1920을 4채널 * 480샘플로 분리
