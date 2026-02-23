@@ -242,9 +242,16 @@ def resnet18_nopool(**kwargs):
     model = ResNet_nopool(BasicBlock, [2, 2, 2, 2], **kwargs)
     return model
 
+def my_resnet(**kwargs):
+    """Constructs a ResNet-18 model.
+    """
+    model = ResNet_nopool(BasicBlock, [2, 2, 2, 2], **kwargs)
+    return model
+
 if __name__ == "__main__":
-    input = torch.randn(32,7,500,64)
+    input = torch.randn(32,13,500,64)
     model = resnet18_nopool(in_channel=7)
+    model = my_resnet(in_channel=13)
     # print(model)
     out = model(input)
     print(out.shape)

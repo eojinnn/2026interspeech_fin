@@ -11,7 +11,7 @@ import yaml
 
 from my_data_loader import LmdbDataset
 
-from models.my_model6 import ResnetConformer_seddoa_nopool_2023
+from models.my_model7 import ResnetConformer_seddoa_nopool_2023
 
 from lr_scheduler.tri_stage_lr_scheduler import TriStageLRScheduler
 
@@ -19,7 +19,7 @@ from utils.cls_tools.cls_compute_seld_results import ComputeSELDResults
 # from utils.cls_tools.cls_compute_sed_results import ComputeSEDResults
 from utils.write_csv import write_output_format_file
 
-from utils.sed_doa import process_foa_input_sed_doa_labels, process_raw_mic_input, SedDoaLoss, SedDoaResult_2023
+from utils.sed_doa import process_foa_input_sed_doa_labels, process_raw_mic_input, MySedDoaLoss, SedDoaResult_2023
 os.environ['CUDA_LAUNCH_BLOCKING'] = '1'
 
 def set_random_seed(seed):
@@ -40,7 +40,7 @@ def main(args):
     # data_process_fn = process_foa_input_sed_doa_labels
     data_process_fn = process_raw_mic_input
     result_class = SedDoaResult_2023
-    criterion = SedDoaLoss(loss_weight=[0.1,1.0])
+    criterion = MySedDoaLoss(loss_weight=[0.1,1.0])
     model = ResnetConformer_seddoa_nopool_2023(in_channel=args['model']['in_channel'], in_dim=args['model']['in_dim'], out_dim=args['model']['out_dim'])
 
     # 训练集初始化
@@ -126,10 +126,15 @@ def main(args):
                 input = data['input'].to(device)
                 target = data['target'].to(device)
                 output = model(input)
-
+                gt = target[..., :13].float()
+                sed_logits = output[..., :13]
+                doa = output[..., 13:]
+                sed_prob = torch.sigmoid(sed_logits)
+                output_for_eval = torch.cat([sed_prob, doa], dim=-1)
+                sed_prob = output_for_eval[..., :13]
                 loss = criterion(output, target)
                 test_loss.append(loss.item())
-                test_result.add_items(data['wav_names'], output.detach().cpu().numpy())
+                test_result.add_items(data['wav_names'], output_for_eval.detach().cpu().numpy())
         output_dict = test_result.get_result()
         test_time = time.time() - start_time
         

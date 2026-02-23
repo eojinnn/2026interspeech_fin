@@ -1,0 +1,36 @@
+data:
+  train_lmdb_dir: './data/feature_labels_2023/lmdb_synthdata_len10s' 
+  test_lmdb_dir: './data/feature_labels_2023/lmdb_synthdata_len10s' 
+  ref_files_dir: 'C:/data/2024DCASE_data/metadata_dev' # label files
+  norm_file: './data/feature_labels_2023/mic_wts' # normalization file
+  segment_len: 100 
+  batch_size: 16
+  train_ignore: 'enh' # or None. 'enh' means ignore the enhancement data
+  test_ignore: 'enh'
+
+model:
+  type: 'seddist_nopool' # my_model7, myexperiment.py
+  criterion: 'BCE+MSPE'
+  loss_weight: [0.1, 1.0]
+  in_channel: 13
+  in_dim: 64
+  out_dim: 39
+  # 'early_manifold'
+  pre-train: False
+  pre-train_model: '...' #'./output/my_experiment3/checkpoints\checkpoint_epoch184_step100000.pth'
+
+train:
+  train_num_workers: 8
+  test_num_workers: 4
+  lr: 0.001
+  nb_steps: 100000
+
+result:
+  log_output_path: './output/my_experiment7/train.log'
+  log_interval: 100
+  checkpoint_output_dir: './output/my_experiment7/checkpoints'
+  dcase_output_dir: './output/my_experiment7/results'
+
+test:
+  test_output_dir: './output/my_experiment7/test_outputs.log'
+  test_output_csv_dir: './output/my_experiment7/test_csvs'

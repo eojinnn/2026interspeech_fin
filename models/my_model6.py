@@ -353,13 +353,17 @@ class ResnetConformer_seddoa_nopool_2023(nn.Module):
         self.t_pooling = nn.MaxPool1d(kernel_size=pool_len)
 
         self.sed_out_layer = nn.Sequential(
-            nn.Linear(encoder_dim, encoder_dim), nn.LeakyReLU(),
-            nn.Linear(encoder_dim, 13), nn.Sigmoid()
+            nn.Linear(encoder_dim, encoder_dim), 
+            nn.LeakyReLU(),
+            nn.Linear(encoder_dim, 13), 
+            # nn.Sigmoid()
         )
 
         self.out_layer = nn.Sequential(
-            nn.Linear(encoder_dim, encoder_dim), nn.LeakyReLU(),
-            nn.Linear(encoder_dim, out_dim), nn.Tanh()
+            nn.Linear(encoder_dim, encoder_dim), 
+            nn.LeakyReLU(),
+            nn.Linear(encoder_dim, out_dim), 
+            nn.Tanh()
         )
 
     def forward(self, audio):

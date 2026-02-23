@@ -259,6 +259,27 @@ class SedDoaLoss(nn.Module):
         loss_doa = self.criterion_doa(doa_out * sed_label_repeat, doa_label) # why multiply with sed_label_repeat? be
         loss = self.loss_weight[0] * loss_sed + self.loss_weight[1] * loss_doa
         return loss
+    
+class MySedDoaLoss(nn.Module):
+    def __init__(self, loss_weight=[1.0, 10.0]):
+        super().__init__()
+        pos_w = None
+        self.criterion_sed = nn.BCEWithLogitsLoss(pos_weight=pos_w)
+        self.criterion_doa = nn.MSELoss()
+        self.loss_weight = loss_weight
+    
+    def forward(self, output, target):
+        sed_out = output[:,:,:13]
+        doa_out = output[:,:,13:] # torch.Size([32, 100, 52])
+        sed_label = target[:,:,:13]
+        doa_label = target[:,:,13:52]
+        loss_sed = self.criterion_sed(sed_out, sed_label)
+        sed_label_repeat = sed_label.repeat(1,1,3) # torch.Size([32, 100, 39])
+        # sed_label_repeat = sed_label.repeat(1,1,4)
+        #pdb.set_trace()
+        loss_doa = self.criterion_doa(doa_out * sed_label_repeat, doa_label) # why multiply with sed_label_repeat? be
+        loss = self.loss_weight[0] * loss_sed + self.loss_weight[1] * loss_doa
+        return loss
 
 class MSPELoss(torch.nn.Module):
     def __init__(self):
