@@ -356,7 +356,7 @@ class ResnetConformer_seddoa_nopool_2023(nn.Module):
             nn.Linear(encoder_dim, encoder_dim), 
             nn.LeakyReLU(),
             nn.Linear(encoder_dim, 13), 
-            # nn.Sigmoid()
+            nn.Sigmoid()
         )
 
         self.out_layer = nn.Sequential(

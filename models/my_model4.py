@@ -427,7 +427,7 @@ class ResnetConformer_seddoa_nopool_2023(nn.Module):
 
         # Fusion
         x = torch.cat([x_feat, cc], dim=1)  # [B, 10, T, 64]
-        print(f"After fusion: {x.shape}")  # 디버깅용 출력
+
         # Downstream
         conv_outputs = self.resnet(x)  # expected [B, C, T_out, W]
         N, C, T_out, W = conv_outputs.shape

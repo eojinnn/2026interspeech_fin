@@ -11,10 +11,10 @@ import yaml
 
 from my_data_loader import LmdbDataset
 
-from models.my_model6 import ResnetConformer_seddoa_nopool_2023
+from models.my_model13 import ResnetConformer_seddoa_nopool_2023
 
 from lr_scheduler.tri_stage_lr_scheduler import TriStageLRScheduler
-
+from utils.cls_tools.visualize import plot_frontend_prior, plot_frontend_dynamic_weights
 from utils.cls_tools.cls_compute_seld_results import ComputeSELDResults
 # from utils.cls_tools.cls_compute_sed_results import ComputeSEDResults
 from utils.write_csv import write_output_format_file
@@ -36,17 +36,19 @@ def main(args):
     logging.basicConfig(filename=args['result']['log_output_path'], filemode='w', level=logging.INFO, format='%(levelname)s: %(asctime)s: %(message)s', datefmt='%m/%d/%Y %H:%M:%S')
     logger = logging.getLogger(__name__)
     logger.info(args)
-
+    
     # data_process_fn = process_foa_input_sed_doa_labels
     data_process_fn = process_raw_mic_input
     result_class = SedDoaResult_2023
     criterion = SedDoaLoss(loss_weight=[0.1,1.0])
-    model = ResnetConformer_seddoa_nopool_2023(in_channel=args['model']['in_channel'], in_dim=args['model']['in_dim'], out_dim=args['model']['out_dim'])
-
+    model = ResnetConformer_seddoa_nopool_2023(in_channel=args['model']['in_channel'], in_dim=args['model']['in_dim'], out_dim=args['model']['out_dim'], norm_path=args['data']['norm_file'])
+    
     # 训练集初始化
     train_split = [1,2,3,5,6]
-    train_dataset = LmdbDataset(args['data']['train_lmdb_dir'], train_split, normalized_features_wts_file=args['data']['norm_file'],
-                                ignore=args['data']['train_ignore'], segment_len=args['data']['segment_len'], data_process_fn=data_process_fn)
+    # train_dataset = LmdbDataset(args['data']['train_lmdb_dir'], train_split, normalized_features_wts_file=args['data']['norm_file'],
+    #                             ignore=args['data']['train_ignore'], segment_len=args['data']['train_segment_len'], data_process_fn=data_process_fn, is_train=True)
+    train_dataset = LmdbDataset(args['data']['train_lmdb_dir'], train_split, normalized_features_wts_file=None,
+                                ignore=args['data']['train_ignore'], segment_len=args['data']['train_segment_len'], data_process_fn=data_process_fn, is_train=True)
     train_dataloader = DataLoader(
         dataset=train_dataset, batch_size=args['data']['batch_size'], shuffle=True, 
         num_workers=args['train']['train_num_workers'], collate_fn=train_dataset.collater
@@ -54,8 +56,10 @@ def main(args):
 
     # 测试集初始化
     test_split = [4]
-    test_dataset = LmdbDataset(args['data']['test_lmdb_dir'], test_split, normalized_features_wts_file=args['data']['norm_file'],
-                                ignore=args['data']['test_ignore'], segment_len=args['data']['segment_len'], data_process_fn=data_process_fn)
+    # test_dataset = LmdbDataset(args['data']['test_lmdb_dir'], test_split, normalized_features_wts_file=args['data']['norm_file'],
+    #                             ignore=args['data']['test_ignore'], segment_len=args['data']['test_segment_len'], data_process_fn=data_process_fn, is_train=False)
+    test_dataset = LmdbDataset(args['data']['test_lmdb_dir'], test_split, normalized_features_wts_file=None,
+                                ignore=args['data']['test_ignore'], segment_len=args['data']['test_segment_len'], data_process_fn=data_process_fn, is_train=False)
     test_dataloader = DataLoader(
         dataset=test_dataset, batch_size=args['data']['batch_size'], shuffle=False, 
         num_workers=args['train']['test_num_workers'], collate_fn=test_dataset.collater
@@ -95,7 +99,7 @@ def main(args):
         model.train()
         for data in train_dataloader:
             input = data['input'].to(device)
-            target = data['target'].to(device)
+            target = data['target'].to(device) #torch.Size([32, 4, 100, 480]) torch.Size([32, 20, 52])
             #pdb.set_trace()
             optimizer.zero_grad()
             output = model(input)
@@ -120,15 +124,36 @@ def main(args):
         # 测试
         start_time = time.time()
         model.eval()
-        test_result = result_class(segment_length=args['data']['segment_len'])
+        test_result = result_class(segment_length=args['data']['test_segment_len'])
+
+        plotted_frontend_weights = False
+        
         with torch.no_grad():
             for data in test_dataloader:
                 input = data['input'].to(device)
                 target = data['target'].to(device)
+                # #chunking
+                # B, C, T, F = input.shape
+                # chunk = 100
+                # outputs = []
+                # for t in range(0, T, chunk):
+                #     input_chunk = input[:,:,t:t+chunk,:]
+                #     output_chunk = model(input_chunk)
+                #     outputs.append(output_chunk)
+                # output = torch.cat(outputs, dim=1)
                 output = model(input)
-
                 loss = criterion(output, target)
                 test_loss.append(loss.item())
+                if (epoch_count % 10 == 0 or epoch_count == 368 - 1) and not plotted_frontend_weights:
+                    frontend = model.module.frontend if hasattr(model, 'module') else model.frontend
+                    plot_frontend_dynamic_weights(
+                        frontend,
+                        input,
+                        save_path=args['result']['frontend_weight_plot_path'],
+                        reduction='mean'
+                    )
+                    plotted_frontend_weights = True
+
                 test_result.add_items(data['wav_names'], output.detach().cpu().numpy())
         output_dict = test_result.get_result()
         test_time = time.time() - start_time

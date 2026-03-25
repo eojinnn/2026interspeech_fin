@@ -9,9 +9,9 @@ from torch.utils.data import DataLoader
 import logging
 import yaml
 
-from lmdb_data_loader_A import LmdbDataset
+from my_data_loader import LmdbDataset
 
-from models.my_model4 import ResnetConformer_seddoa_nopool_2023
+from models.my_model12 import ResnetConformer_seddoa_nopool_2023
 
 from lr_scheduler.tri_stage_lr_scheduler import TriStageLRScheduler
 from utils.cls_tools.cls_compute_seld_results import ComputeSELDResults
@@ -43,11 +43,13 @@ def main(args):
     data_process_fn = process_raw_mic_input
     result_class = SedDoaResult_2023
     criterion = SedDoaLoss(loss_weight=[0.1,1])
-    model = ResnetConformer_seddoa_nopool_2023(in_channel=args['model']['in_channel'], in_dim=args['model']['in_dim'], out_dim=args['model']['out_dim'])
+    model = ResnetConformer_seddoa_nopool_2023(in_channel=args['model']['in_channel'], in_dim=args['model']['in_dim'], out_dim=args['model']['out_dim'], norm_path=args['data']['norm_file'])
 
     test_split = [4]
-    test_dataset = LmdbDataset(args['data']['test_lmdb_dir'], test_split, normalized_features_wts_file=args['data']['norm_file'],
-                                ignore=args['data']['test_ignore'], segment_len=None, data_process_fn=data_process_fn)
+    # test_dataset = LmdbDataset(args['data']['test_lmdb_dir'], test_split, normalized_features_wts_file=args['data']['norm_file'],
+    #                             ignore=args['data']['test_ignore'], segment_len=args['data']['test_segment_len'], data_process_fn=data_process_fn, is_train=False)
+    test_dataset = LmdbDataset(args['data']['test_lmdb_dir'], test_split, normalized_features_wts_file=None,
+                                ignore=args['data']['test_ignore'], segment_len=args['data']['test_segment_len'], data_process_fn=data_process_fn, is_train=False)
     test_dataloader = DataLoader(
         dataset=test_dataset, batch_size=1, shuffle=False, 
         num_workers=args['train']['test_num_workers'], collate_fn=test_dataset.collater

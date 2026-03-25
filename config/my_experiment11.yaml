@@ -2,9 +2,9 @@ data:
   train_lmdb_dir: './data/feature_labels_2023/lmdb_synthdata_len10s' 
   test_lmdb_dir: './data/feature_labels_2023/lmdb_synthdata_len10s' 
   ref_files_dir: 'C:/data/2024DCASE_data/metadata_dev' # label files
-  norm_file: './data/feature_labels_2023/mic_wts' # normalization file
+  norm_file: "C:/26'interspeech/Solution_on_3D_SELD/data/feature_labels_2023/mic_wts" # normalization file
   test_segment_len: 100 
-  train_segment_len: 20
+  train_segment_len: 100
   batch_size: 32
   train_ignore: 'enh' # or None. 'enh' means ignore the enhancement data
   test_ignore: 'enh'
@@ -21,17 +21,18 @@ model:
   pre-train_model: '...' #'./output/my_experiment3/checkpoints\checkpoint_epoch184_step100000.pth'
 
 train:
-  train_num_workers: 8
-  test_num_workers: 4
+  train_num_workers: 0
+  test_num_workers: 0
   lr: 0.001
   nb_steps: 100000
 
 result:
-  log_output_path: './output/my_experiment7/train.log'
+  log_output_path: './output/my_experiment11/train.log'
   log_interval: 100
-  checkpoint_output_dir: './output/my_experiment7/checkpoints'
-  dcase_output_dir: './output/my_experiment7/results'
+  checkpoint_output_dir: './output/my_experiment11/checkpoints'
+  dcase_output_dir: './output/my_experiment11/results'
+  frontend_weight_plot_path: './output/my_experiment11/frontend_weights.png'
 
 test:
-  test_output_dir: './output/my_experiment7/test_outputs.log'
-  test_output_csv_dir: './output/my_experiment7/test_csvs'
+  test_output_dir: './output/my_experiment11/test_outputs.log'
+  test_output_csv_dir: './output/my_experiment11/test_csvs'

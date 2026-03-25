@@ -263,7 +263,7 @@ class SedDoaLoss(nn.Module):
 class MySedDoaLoss(nn.Module):
     def __init__(self, loss_weight=[1.0, 10.0]):
         super().__init__()
-        pos_w = None
+        pos_w = torch.ones([13]) * 3.0
         self.criterion_sed = nn.BCEWithLogitsLoss(pos_weight=pos_w)
         self.criterion_doa = nn.MSELoss()
         self.loss_weight = loss_weight
