@@ -11,7 +11,7 @@ import yaml
 
 from my_data_loader import LmdbDataset
 
-from models.my_model14 import ResnetConformer_seddoa_nopool_2023
+from models.my_model10 import ResnetConformer_seddoa_nopool_2023
 
 from lr_scheduler.tri_stage_lr_scheduler import TriStageLRScheduler
 from utils.cls_tools.cls_compute_seld_results import ComputeSELDResults
@@ -23,6 +23,36 @@ from utils.sed_doa import process_foa_input_sed_doa_labels, process_raw_mic_inpu
 # ---------------------------------------------------------------------
 from ast import main
 import sys
+import math
+
+def add_white_noise_snr(x, snr_db, same_noise_across_channels=True):
+    """
+    x: [B, M, F, T]  (현재 네 모델 입력 형태)
+    snr_db: 예) 20, 10, 5, 0
+    same_noise_across_channels:
+        True  -> 모든 채널에 같은 noise를 넣음
+                 (처음 robustness test로 추천)
+        False -> 채널별 독립 noise
+                 (더 harsh하지만 spatial cue를 더 많이 망가뜨릴 수 있음)
+    """
+    if snr_db is None:
+        return x
+
+    if same_noise_across_channels:
+        noise = torch.randn(
+            x.size(0), 1, x.size(2), x.size(3),
+            device=x.device, dtype=x.dtype
+        ).expand_as(x)
+    else:
+        noise = torch.randn_like(x)
+
+    sig_power = x.pow(2).mean(dim=(1, 2, 3), keepdim=True)
+    noise_power = noise.pow(2).mean(dim=(1, 2, 3), keepdim=True)
+
+    target_noise_power = sig_power / (10.0 ** (snr_db / 10.0))
+    noise = noise * torch.sqrt(target_noise_power / (noise_power + 1e-8))
+
+    return x + noise
 
 def set_random_seed(seed):
     np.random.seed(seed)
@@ -74,6 +104,13 @@ def main(args):
     for data in test_dataloader:
         input = data['input'].to(device)
         target = data['target'].to(device)
+
+        input = add_white_noise_snr(
+            input,
+            snr_db=args['test'].get('snr_db', None),
+            same_noise_across_channels=args['test'].get('same_noise_across_channels', True)
+            )
+
         with torch.no_grad():
             output = model(input) # [1, 100, 52]
 

@@ -35,24 +35,40 @@ def _compute_stft_for_frontend(frontend, wav):
     return stft, mag
 
 
-def plot_frontend_prior(frontend, sr=24000, save_path=None):
+def _get_prior_logs(frontend, mode="current"):
     """
-    GRU-style frontend의 prior 모양만 시각화.
-    이건 입력과 무관한 '초기 편향'을 보는 용도.
+    mode:
+        - 'base'    : fixed base prior only
+        - 'current' : base + current trainable delta 반영
+    """
+    shared_prior_log = frontend.shared_prior_log.detach().cpu().numpy()
+
+    if mode == "base":
+        mel_prior_log = frontend.mel_prior_base.detach().cpu().numpy()
+        gcc_prior_log = frontend.gcc_prior_base.detach().cpu().numpy()
+    elif mode == "current":
+        mel_prior_log_t, gcc_prior_log_t = frontend.get_current_prior_logs()
+        mel_prior_log = mel_prior_log_t.detach().cpu().numpy()
+        gcc_prior_log = gcc_prior_log_t.detach().cpu().numpy()
+    else:
+        raise ValueError("mode must be 'base' or 'current'")
+
+    return shared_prior_log, mel_prior_log, gcc_prior_log
+
+
+def plot_frontend_prior(frontend, sr=24000, save_path=None, mode="current"):
+    """
+    prior 모양만 시각화.
+    mode='base'    : 초기 고정 prior
+    mode='current' : 현재 학습된 delta까지 반영된 prior
     """
     was_training = frontend.training
     frontend.eval()
 
     with torch.no_grad():
         freqs = np.linspace(0, sr / 2, frontend.n_freqs)
+        shared_prior_log, mel_prior_log, gcc_prior_log = _get_prior_logs(frontend, mode=mode)
 
-        # buffer -> numpy
-        shared_prior_log = frontend.shared_prior_log.detach().cpu().numpy()
-        mel_prior_log = frontend.mel_prior_log.detach().cpu().numpy()
-        gcc_prior_log = frontend.gcc_prior_log.detach().cpu().numpy()
-
-        # "prior weight"처럼 보기 위해 exp로 변환
-        # shared prior는 보통 0이라 거의 1
         shared_prior_weight = np.exp(frontend.shared_scale * shared_prior_log)
         mel_prior_weight = np.exp(
             frontend.shared_scale * shared_prior_log
@@ -65,12 +81,12 @@ def plot_frontend_prior(frontend, sr=24000, save_path=None):
 
     plt.figure(figsize=(9, 5))
     plt.plot(freqs, shared_prior_weight, '--', label='Shared prior')
-    plt.plot(freqs, mel_prior_weight, '--', label='Mel prior')
-    plt.plot(freqs, gcc_prior_weight, '--', label='GCC prior')
+    plt.plot(freqs, mel_prior_weight, '--', label=f'Mel prior ({mode})')
+    plt.plot(freqs, gcc_prior_weight, '--', label=f'GCC prior ({mode})')
 
     plt.xlabel('Frequency (Hz)')
     plt.ylabel('Weight')
-    plt.title('GRU-style frontend priors')
+    plt.title(f'GRU-style frontend priors ({mode})')
     plt.legend()
     plt.grid(True)
     plt.tight_layout()
@@ -89,7 +105,7 @@ def plot_frontend_prior(frontend, sr=24000, save_path=None):
         frontend.train()
 
 
-def plot_frontend_dynamic_weights(frontend, wav, sr=24000, save_path=None, reduction='mean'):
+def plot_frontend_dynamic_weights(frontend, wav, sr=24000, save_path=None, reduction='mean', prior_mode="current"):
     """
     실제 입력 wav에 대해 나온 dynamic mel/gcc weights를 시각화.
 
@@ -99,20 +115,21 @@ def plot_frontend_dynamic_weights(frontend, wav, sr=24000, save_path=None, reduc
         reduction:
             - 'mean': batch 평균 곡선 1개씩 그림
             - 'none': batch의 각 샘플 곡선을 전부 그림
+        prior_mode:
+            - 'base'    : 고정 base prior와 비교
+            - 'current' : 현재 학습된 prior와 비교
     """
     was_training = frontend.training
     frontend.eval()
 
     with torch.no_grad():
         stft, mag = _compute_stft_for_frontend(frontend, wav)
-        mel_w, gcc_w = frontend.get_weights(stft, mag)   # [B, Freq], [B, Freq]
+        mel_w, gcc_w = frontend.get_weights(stft, mag)
 
         mel_w = mel_w.detach().cpu().numpy()
         gcc_w = gcc_w.detach().cpu().numpy()
 
-        shared_prior_log = frontend.shared_prior_log.detach().cpu().numpy()
-        mel_prior_log = frontend.mel_prior_log.detach().cpu().numpy()
-        gcc_prior_log = frontend.gcc_prior_log.detach().cpu().numpy()
+        shared_prior_log, mel_prior_log, gcc_prior_log = _get_prior_logs(frontend, mode=prior_mode)
 
         mel_prior_weight = np.exp(
             frontend.shared_scale * shared_prior_log
@@ -127,9 +144,8 @@ def plot_frontend_dynamic_weights(frontend, wav, sr=24000, save_path=None, reduc
 
     plt.figure(figsize=(10, 5))
 
-    # prior
-    plt.plot(freqs, mel_prior_weight, '--', label='Mel prior', linewidth=2)
-    plt.plot(freqs, gcc_prior_weight, '--', label='GCC prior', linewidth=2)
+    plt.plot(freqs, mel_prior_weight, '--', label=f'Mel prior ({prior_mode})', linewidth=2)
+    plt.plot(freqs, gcc_prior_weight, '--', label=f'GCC prior ({prior_mode})', linewidth=2)
 
     if reduction == 'mean':
         mel_mean = mel_w.mean(axis=0)
@@ -153,7 +169,7 @@ def plot_frontend_dynamic_weights(frontend, wav, sr=24000, save_path=None, reduc
 
     plt.xlabel('Frequency (Hz)')
     plt.ylabel('Weight')
-    plt.title('GRU-style frequency weights: prior vs dynamic')
+    plt.title(f'GRU-style frequency weights: prior vs dynamic ({prior_mode})')
     plt.legend()
     plt.grid(True)
     plt.tight_layout()

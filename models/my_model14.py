@@ -111,7 +111,7 @@ class AuditoryFrontend(nn.Module):
 
         # log-weight scale / clamp range
         self.shared_scale = 0.20
-        self.residual_scale = 0.10
+        self.residual_scale = 0.12
         self.max_log_weight = 0.40   #exp(±0.4)≈[0.67,1.49]
 
         self.scaler = GlobalScalar(scaler_path)

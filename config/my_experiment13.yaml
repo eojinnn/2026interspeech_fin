@@ -5,7 +5,7 @@ data:
   norm_file: "C:/26'interspeech/Solution_on_3D_SELD/data/feature_labels_2023/mic_wts" # normalization file
   test_segment_len: 100 
   train_segment_len: 100
-  # segment_len: 100
+  segment_len: 100
   batch_size: 32
   train_ignore: 'enh' # or None. 'enh' means ignore the enhancement data
   test_ignore: 'enh'
@@ -18,8 +18,8 @@ model:
   in_dim: 64
   out_dim: 39
   # 'early_manifold'
-  pre-train: False
-  pre-train_model: #'./output/my_experiment12/checkpoints\checkpoint_epoch341_step93093.pth'
+  pre-train: True
+  pre-train_model: './output/my_experiment13/checkpoints\checkpoint_epoch345_step94185.pth'
 
 train:
   train_num_workers: 0
@@ -37,3 +37,5 @@ result:
 test:
   test_output_dir: './output/my_experiment13/test_outputs.log'
   test_output_csv_dir: './output/my_experiment13/test_csvs'
+  snr_db: 20
+  same_noise_across_channels: False

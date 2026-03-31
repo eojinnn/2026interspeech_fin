@@ -5,7 +5,7 @@ data:
   norm_file: "C:/26'interspeech/Solution_on_3D_SELD/data/feature_labels_2023/mic_wts" # normalization file
   test_segment_len: 100 
   train_segment_len: 100
-  segment_len: 100
+  # segment_len: 100
   batch_size: 32
   train_ignore: 'enh' # or None. 'enh' means ignore the enhancement data
   test_ignore: 'enh'
@@ -18,8 +18,8 @@ model:
   in_dim: 64
   out_dim: 39
   # 'early_manifold'
-  pre-train: True
-  pre-train_model: './output/my_experiment10/checkpoints\checkpoint_epoch362_step98826.pth'
+  pre-train: False
+  pre-train_model: #'./output/my_experiment13/checkpoints\checkpoint_epoch345_step94185.pth'
 
 train:
   train_num_workers: 0
@@ -28,13 +28,14 @@ train:
   nb_steps: 100000
 
 result:
-  log_output_path: './output/my_experiment10/train.log'
+  log_output_path: './output/my_experiment15/train5.log'
   log_interval: 100
-  checkpoint_output_dir: './output/my_experiment10/checkpoints'
-  dcase_output_dir: './output/my_experiment10/results'
+  checkpoint_output_dir: './output/my_experiment15/checkpoints'
+  dcase_output_dir: './output/my_experiment15/results'
+  frontend_weight_plot_path: './output/my_experiment15/frontend_weights5.png'
 
 test:
-  test_output_dir: './output/my_experiment10/test_outputs.log'
-  test_output_csv_dir: './output/my_experiment10/test_csvs'
+  test_output_dir: './output/my_experiment15/test_outputs.log'
+  test_output_csv_dir: './output/my_experiment15/test_csvs'
   snr_db: 20
   same_noise_across_channels: False
